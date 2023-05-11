@@ -84,3 +84,27 @@ def stat_data(df, col, value, yr, a):
 
 #reading dataset
 env_data = read_data("API_6_DS2_en_excel_v2_5361655 (1).xlsx")
+
+#selecting year
+start = 1960
+end = 2015
+year = [str(i) for i in range(start, end+1)]
+#selecting indicator for fitting
+Indicator = [
+    'CO2 emissions from residential buildings and commercial and public services (% of total fuel combustion)', 'CO2 emissions from solid fuel consumption (% of total)']
+data = stat_data(env_data, 'Country Name', 'India', year, Indicator)
+#selecting indicator for clustering
+Indicator1 = ['Electricity production from renewable sources, excluding hydroelectric (% of total)', 'CO2 emissions from solid fuel consumption (% of total)', 'Electricity production from oil, gas and coal sources (% of total)',
+              'CO2 emissions from liquid fuel consumption (% of total)', 'CO2 emissions from other sectors, excluding residential buildings and commercial and public services (% of total fuel combustion)']
+data1 = stat_data(env_data, 'Country Name', 'Australia', year, Indicator1)
+#renaming data
+data = data.rename_axis('Year').reset_index()
+data['Year'] = data['Year'].astype('int')
+data.dtypes
+#shortening indicators
+data1 = data1.rename(columns={
+    'Electricity production from renewable sources, excluding hydroelectric (% of total)': 'Eletricity production(renewable)',
+    'CO2 emissions from solid fuel consumption (% of total)': 'CO2 emission(solid)',
+    'Electricity production from oil, gas and coal sources (% of total)': 'electricity production (total)',
+    'CO2 emissions from liquid fuel consumption (% of total)': 'CO2 emission(liquid)',
+    'CO2 emissions from other sectors, excluding residential buildings and commercial and public services (% of total fuel combustion)': 'CO2 emission(other sector)'})
