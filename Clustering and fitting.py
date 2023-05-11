@@ -19,6 +19,7 @@ import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 %matplotlib inline
 
+
 def Expo(t, scale, growth):
     f = (scale * np.exp(growth * (t-1960)))
     return f
@@ -109,6 +110,7 @@ data1 = data1.rename(columns={
     'CO2 emissions from liquid fuel consumption (% of total)': 'CO2 emission(liquid)',
     'CO2 emissions from other sectors, excluding residential buildings and commercial and public services (% of total fuel combustion)': 'CO2 emission(other sector)'})
 
+
 def map_corr(df, size=6):
     """Function creates heatmap of correlation matrix for each pair of 
     columns in the dataframe.
@@ -129,7 +131,8 @@ def map_corr(df, size=6):
     plt.title("Heatmap of correlation matrix", color='red')
     plt.colorbar()
     plt.savefig("Heatmap of correlation matrix.png")
-    
+
+
 #correlation of datas
 corr = data1.corr()
 map_corr(data1)
@@ -147,7 +150,7 @@ plt.savefig("scatter matrix.png")
 plt.figure()
 plt.scatter(
     data["Year"], data["CO2 emissions from solid fuel consumption (% of total)"])
-plt.title('Scatter Plot between 1960-2010 before fitting', color = 'red')
+plt.title('Scatter Plot between 1960-2010 before fitting', color='red')
 plt.ylabel('CO2 emissions from solid fuel consumption (% of total)')
 #setting the x limit
 plt.xlim(1960, 2015)
@@ -176,3 +179,52 @@ print("CO2 emissions from solid fuel consumption in 2030 is ", low, "and", up)
 low, up = err_ranges(2040, Expo, popt, sigma)
 print("CO2 emissions from solid fuel consumption in 2040 is ", low, "and", up)
 
+scaler = MinMaxScaler()
+scaler.fit(data1[['CO2 emission(solid)']])
+data['Scaler_T'] = scaler.transform(
+    data1['CO2 emission(solid)'].values.reshape(-1, 1))
+
+scaler.fit(data1[['CO2 emission(liquid)']])
+data['Scaler_M'] = scaler.transform(
+    data1['CO2 emission(liquid)'].values.reshape(-1, 1))
+data_c = data.loc[:, ['Scaler_T', 'Scaler_M']]
+print(data_c)
+
+
+def n_cluster(data_frame):
+  k_rng = range(1, 10)
+  sse = []
+  for k in k_rng:
+    km = KMeans(n_clusters=k)
+    km.fit_predict(data_frame)
+    sse.append(km.inertia_)
+  return k_rng, sse
+
+
+a, b = n_cluster(data_c)
+#setting x and y label
+plt.xlabel = ('k')
+plt.ylabel('sum of squared error')
+plt.plot(a, b)
+plt.title("Number of clusters of Co2 emission of soild fuel", color='red')
+print(b)
+plt.savefig("Number of clusters.png")
+
+#code clustering
+km = KMeans(n_clusters=2)
+pred = km.fit_predict(data_c[['Scaler_T', 'Scaler_M']])
+data_c['cludter'] = pred
+data_c.head()
+
+centers = km.cluster_centers_
+
+dc1 = data_c[data_c.cludter == 0]
+dc2 = data_c[data_c.cludter == 1]
+plt.figure()
+plt.scatter(dc1['Scaler_T'], dc1['Scaler_M'], color='green')
+plt.scatter(dc2['Scaler_T'], dc2['Scaler_M'], color='red')
+plt.scatter(centers[:, 0], centers[:, 1], s=200, marker='*', color='black')
+plt.legend()
+plt.title("Clustering", color='red')
+plt.show()
+plt.savefig("Cluster.png")
