@@ -108,3 +108,71 @@ data1 = data1.rename(columns={
     'Electricity production from oil, gas and coal sources (% of total)': 'electricity production (total)',
     'CO2 emissions from liquid fuel consumption (% of total)': 'CO2 emission(liquid)',
     'CO2 emissions from other sectors, excluding residential buildings and commercial and public services (% of total fuel combustion)': 'CO2 emission(other sector)'})
+
+def map_corr(df, size=6):
+    """Function creates heatmap of correlation matrix for each pair of 
+    columns in the dataframe.
+
+    Input:
+        df: pandas DataFrame
+        size: vertical and horizontal size of the plot (in inch)
+        
+    """
+    corr = df.corr()
+    plt.figure(figsize=(size, size))
+    # fig, ax = plt.subplots()
+    plt.matshow(corr, cmap='coolwarm')
+    # setting ticks to column names
+    plt.xticks(range(len(corr.columns)), corr.columns,
+               rotation=90, color='maroon')
+    plt.yticks(range(len(corr.columns)), corr.columns, color='maroon')
+    plt.title("Heatmap of correlation matrix", color='red')
+    plt.colorbar()
+    plt.savefig("Heatmap of correlation matrix.png")
+    
+#correlation of datas
+corr = data1.corr()
+map_corr(data1)
+plt.show()
+
+#scatter matrix
+plt.figure()
+pd.plotting.scatter_matrix(data1, figsize=(9, 9))
+plt.tight_layout()
+#setting the title
+plt.title("Scater matrix")
+plt.savefig("scatter matrix.png")
+
+#scatterplot before fitting
+plt.figure()
+plt.scatter(
+    data["Year"], data["CO2 emissions from solid fuel consumption (% of total)"])
+plt.title('Scatter Plot between 1960-2010 before fitting', color = 'red')
+plt.ylabel('CO2 emissions from solid fuel consumption (% of total)')
+#setting the x limit
+plt.xlim(1960, 2015)
+plt.savefig("Scatter_fit.png")
+plt.show()
+
+#plot after fitting
+popt, pcov = opt.curve_fit(
+    Expo, data['Year'], data['CO2 emissions from solid fuel consumption (% of total)'], p0=[1000, 0.02])
+data["Pop"] = Expo(data['Year'], *popt)
+sigma = np.sqrt(np.diag(pcov))
+low, up = err_ranges(data["Year"], Expo, popt, sigma)
+plt.figure()
+plt.title("Plot After Fitting")
+plt.plot(data["Year"],
+         data['CO2 emissions from solid fuel consumption (% of total)'], label="data")
+plt.plot(data["Year"], data["Pop"], label="fit")
+plt.fill_between(data["Year"], low, up, alpha=0.7)
+plt.legend()
+plt.show()
+plt.savefig("Plot After Fitting.png")
+
+#Predicting future values
+low, up = err_ranges(2030, Expo, popt, sigma)
+print("CO2 emissions from solid fuel consumption in 2030 is ", low, "and", up)
+low, up = err_ranges(2040, Expo, popt, sigma)
+print("CO2 emissions from solid fuel consumption in 2040 is ", low, "and", up)
+
